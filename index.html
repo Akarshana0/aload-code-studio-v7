@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+  <!-- PWA Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="ACS v6"/>
+  <meta name="application-name" content="ALONE CODE STUDIO v7"/>
+  <meta name="theme-color" content="#080b14"/>
+  <meta name="msapplication-TileColor" content="#080b14"/>
+  <meta name="msapplication-TileImage" content="icons/icon-192.png"/>
+  <meta name="description" content="Fully offline professional code editor. Works on iOS, Android, Windows, Linux."/>
+  <!-- iOS splash screens (optional enhancement) -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+  <title>ALONE CODE STUDIO v7</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <!-- App icons -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-192.png"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="16x16" href="icons/icon-192.png"/>
+  <!-- Fonts (cached by SW after first load) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+
+  <!-- CodeMirror 6 via ESM (cached by SW) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "@codemirror/state":           "https://esm.sh/@codemirror/state@6",
+      "@codemirror/view":            "https://esm.sh/@codemirror/view@6",
+      "@codemirror/commands":        "https://esm.sh/@codemirror/commands@6",
+      "@codemirror/language":        "https://esm.sh/@codemirror/language@6",
+      "@codemirror/search":          "https://esm.sh/@codemirror/search@6",
+      "@codemirror/autocomplete":    "https://esm.sh/@codemirror/autocomplete@6",
+      "@codemirror/lint":            "https://esm.sh/@codemirror/lint@6",
+      "@codemirror/lang-python":     "https://esm.sh/@codemirror/lang-python@6",
+      "@codemirror/lang-javascript": "https://esm.sh/@codemirror/lang-javascript@6",
+      "@codemirror/lang-cpp":        "https://esm.sh/@codemirror/lang-cpp@6",
+      "@codemirror/lang-java":       "https://esm.sh/@codemirror/lang-java@6",
+      "@codemirror/lang-rust":       "https://esm.sh/@codemirror/lang-rust@6",
+      "@codemirror/lang-go":         "https://esm.sh/@codemirror/lang-go@6",
+      "@codemirror/lang-php":        "https://esm.sh/@codemirror/lang-php@6",
+      "@codemirror/lang-html":       "https://esm.sh/@codemirror/lang-html@6",
+      "@codemirror/lang-css":        "https://esm.sh/@codemirror/lang-css@6",
+      "@codemirror/lang-sql":        "https://esm.sh/@codemirror/lang-sql@6",
+      "@codemirror/lang-xml":        "https://esm.sh/@codemirror/lang-xml@6",
+      "@codemirror/lang-markdown":   "https://esm.sh/@codemirror/lang-markdown@6",
+      "@codemirror/theme-one-dark":  "https://esm.sh/@codemirror/theme-one-dark@6",
+      "@lezer/highlight":            "https://esm.sh/@lezer/highlight@1"
+    }
+  }
+  </script>
+
+  <!-- Vue 3 (cached by SW) -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+</head>
+<body>
+<div id="app" v-cloak>
+
+  <!-- ══════════ SPLASH ══════════ -->
+  <div class="splash" v-if="loading">
+    <div class="splash-inner">
+      <div class="splash-logo">
+        <img src="icons/icon-192.png" width="72" height="72" style="border-radius:20px;filter:drop-shadow(0 0 24px rgba(77,158,255,0.7))" alt="ACS"/>
+      </div>
+      <div class="splash-title">ALONE CODE STUDIO</div>
+      <div class="splash-version">v6.0 · Offline · PWA · iOS · Android · Windows · Linux</div>
+      <div class="splash-sub">{{ splashMsg }}</div>
+      <div class="splash-bar"><div class="splash-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SETTINGS MODAL ══════════ -->
+  <div class="modal-overlay" v-if="settingsOpen" @click.self="settingsOpen=false">
+    <div class="settings-modal">
+      <div class="modal-head">
+        <div class="modal-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+          Settings
+        </div>
+        <button class="modal-close" @click="settingsOpen=false">✕</button>
+      </div>
+      <div class="modal-body">
+        <!-- Offline status -->
+        <div class="settings-section">
+          <div class="settings-section-title">OFFLINE EXECUTION</div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;font-size:0.75rem;">
+            <div v-for="lang in ['python','javascript','typescript','html','css','sql','markdown','cpp','c','java','rust','go','php','ruby','bash','kotlin','csharp','lua','swift']" :key="lang"
+              style="background:rgba(57,208,216,0.08);border:1px solid rgba(57,208,216,0.2);color:var(--cyan);padding:2px 8px;border-radius:10px;font-size:0.65rem;display:flex;align-items:center;gap:3px;">
+              ⚡ {{ lang }}
+            </div>
+          </div>
+          <p style="font-size:0.7rem;color:var(--muted);margin-top:6px;line-height:1.6;">
+            ⚡ All 20 languages run offline via browser simulators.<br>
+            🌐 Go online for full accurate cloud execution via Piston API.
+          </p>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-section-title">EDITOR THEME</div>
+          <div class="theme-grid">
+            <button v-for="t in availableThemes" :key="t.id"
+              class="theme-card" :class="{active:settings.theme===t.id}"
+              @click="settings.theme=t.id;applyTheme()">
+              <div class="theme-preview" :style="t.preview"></div>
+              <span>{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">FONT FAMILY</div>
+          <div class="font-options">
+            <button v-for="f in availableFonts" :key="f.id"
+              class="font-option" :class="{active:settings.font===f.id}"
+              :style="{fontFamily:f.family}"
+              @click="settings.font=f.id;applyFont()">
+              {{ f.label }}
+            </button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">FONT SIZE</div>
+          <div class="size-slider-wrap">
+            <input type="range" min="10" max="24" v-model.number="fontSize" class="size-slider" @input="savePrefs"/>
+            <span class="size-val">{{ fontSize }}px</span>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">TAB SIZE</div>
+          <div class="tab-size-opts">
+            <button v-for="n in [2,4,8]" :key="n" class="tab-size-btn"
+              :class="{active:settings.tabSize===n}"
+              @click="settings.tabSize=n;savePrefs()">{{ n }}</button>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">ANTHROPIC API KEY</div>
+          <div class="api-key-wrap">
+            <input :type="showApiKey?'text':'password'" class="api-key-input"
+              v-model="settings.apiKey" placeholder="sk-ant-api03-…" @input="savePrefs"/>
+            <button class="api-key-toggle" @click="showApiKey=!showApiKey">{{ showApiKey?'🙈':'👁' }}</button>
+          </div>
+          <p class="api-key-hint">Used for AI Assistant (requires internet). Stored only in your browser.</p>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">PROJECT NAME</div>
+          <input class="project-name-input" v-model="settings.projectName" placeholder="my-project" @input="savePrefs"/>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">INSTALL AS APP</div>
+          <div style="font-size:0.75rem;color:var(--muted);line-height:1.8;">
+            <div>📱 <strong>iOS:</strong> Safari → Share → "Add to Home Screen"</div>
+            <div>🤖 <strong>Android:</strong> Chrome → Menu → "Install App"</div>
+            <div>💻 <strong>Windows/Mac:</strong> Chrome/Edge → address bar → Install icon</div>
+            <div>🐧 <strong>Linux:</strong> Chrome → Menu → "Install ALONE CODE STUDIO"</div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-title">KEYBOARD SHORTCUTS</div>
+          <div class="shortcuts-list">
+            <div class="shortcut-row" v-for="s in [
+              {k:'Ctrl+Enter',a:'Run code'},
+              {k:'Ctrl+S',    a:'Save all files'},
+              {k:'Ctrl+F',    a:'Find & Replace'},
+              {k:'Ctrl+B',    a:'Toggle sidebar'},
+              {k:'Ctrl+\\\\', a:'Toggle split view'},
+              {k:'Ctrl+P',    a:'Toggle Preview/Output'},
+              {k:'Ctrl+/',    a:'Toggle comment'},
+              {k:'Escape',    a:'Close panels'},
+            ]" :key="s.k">
+              <kbd>{{ s.k }}</kbd>
+              <span>{{ s.a }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ MAIN APP ══════════ -->
+  <template v-if="!loading">
+
+  <!-- TOP BAR -->
+  <header class="topbar" :class="{'focus-mode':focusMode}">
+    <div class="topbar-left">
+      <button class="icon-btn" @click="sidebarOpen=!sidebarOpen" title="Toggle Sidebar (Ctrl+B)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/>
+        </svg>
+      </button>
+      <div class="brand">
+        <img src="icons/icon-192.png" class="brand-icon-img" width="24" height="24" alt="ACS"/>
+        <span class="brand-name">{{ settings.projectName || 'ALONE CODE STUDIO' }}</span>
+      </div>
+      <!-- Offline indicator -->
+      <div v-if="canPreview" class="offline-mode-badge">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        OFFLINE
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="lang-picker-wrap">
+        <div class="lang-dot" :style="{background:activeLangCfg?.color}"></div>
+        <select class="lang-select" v-model="currentLang" @change="onLangChange">
+          <optgroup v-for="group in langGroups" :key="group.label" :label="group.label">
+            <option v-for="l in group.langs" :key="l.id" :value="l.id">
+              {{ l.icon }} {{ l.label }}{{ l.offlineOk ? ' ⚡' : '' }}
+            </option>
+          </optgroup>
+        </select>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"
+          style="color:#8b949e;pointer-events:none;flex-shrink:0"><path d="M1 3l4 4 4-4"/></svg>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Split View -->
+      <button class="icon-btn" :class="{active:splitView}" @click="toggleSplit" title="Split View (Ctrl+\\)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="3" x2="12" y2="21"/>
+        </svg>
+      </button>
+      <!-- Preview -->
+      <button class="icon-btn preview-btn" :class="{active:previewOpen}" @click="previewOpen=!previewOpen"
+        title="Preview / Output (Ctrl+P)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+        </svg>
+        <span class="preview-label">Preview</span>
+      </button>
+      <!-- Wrap -->
+      <button class="icon-btn" :class="{active:lineWrap}" @click="toggleWrap" title="Line Wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+          <polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+        </svg>
+      </button>
+      <!-- Find -->
+      <button class="icon-btn" :class="{active:findOpen}" @click="findOpen=!findOpen" title="Find (Ctrl+F)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <!-- Import Files (Ctrl+I) -->
+      <button class="icon-btn" @click="openImport" title="Import Files (Ctrl+I)" style="color:var(--cyan)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </button>
+      <!-- Download -->
+      <button class="icon-btn" @click="downloadFile" title="Download File">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      <!-- Settings -->
+      <button class="icon-btn" @click="settingsOpen=true" title="Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <!-- AI Panel -->
+      <button class="icon-btn ai-btn" :class="{active:aiPanelOpen}" @click="aiPanelOpen=!aiPanelOpen" title="AI Assistant">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a10 10 0 1 0 10 10"/>
+          <circle cx="18" cy="6" r="3" fill="var(--purple)" stroke="none"/>
+        </svg>
+        <span class="ai-label">AI</span>
+      </button>
+      <!-- Run stats badge -->
+      <div class="exec-badge" v-if="lastStats.time!==null && !isRunning" :class="lastStats.exit===0?'ok':'fail'">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <template v-if="lastStats.exit===0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></template>
+          <template v-else><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></template>
+        </svg>
+        {{ lastStats.time }}ms
+      </div>
+      <!-- Run Button -->
+      <button class="run-btn" @click="runCode"
+        :disabled="isRunning"
+        :class="{running:isRunning}"
+        :title="canPreview ? 'Run offline (Ctrl+Enter)' : (isOnline ? 'Run code (Ctrl+Enter)' : 'Internet required')">
+        <span v-if="!isRunning" class="run-icon">▶</span>
+        <span v-else class="run-spinner"></span>
+        <span class="run-label">{{ isRunning ? runStatus : 'RUN' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ══════════ MAIN AREA ══════════ -->
+  <div class="main-area" :class="{'focus-mode':focusMode}">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar glass-panel" :class="{open:sidebarOpen,'focus-mode':focusMode}">
+      <div class="sidebar-head">
+        <div class="sidebar-project">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="sidebar-label">EXPLORER</span>
+        </div>
+        <div class="sidebar-actions">
+          <button class="icon-btn-sm" @click="createNewFile()" title="New File">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </button>
+          <button class="icon-btn-sm" @click="createNewFolder()" title="New Folder">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="file-tree">
+        <tree-node
+          v-for="node in fileTree" :key="node.id"
+          :node="node" :active-file-id="activeFileId" :split-file-id="splitFileId" :depth="0"
+          @open-file="switchFile" @open-split="openSplit" @rename="startRename"
+          @delete-node="deleteNode" @toggle-folder="toggleFolder"
+        />
+      </div>
+      <div class="sidebar-foot">
+        <div class="api-status">
+          <span class="status-dot" :class="isOnline ? apiStatus : 'offline'"></span>
+          <span>{{ isOnline ? 'Piston API' : 'Offline Mode' }}</span>
+        </div>
+        <span style="flex:1"></span>
+        <div class="version-tag">v6.0</div>
+      </div>
+    </aside>
+
+    <div class="sidebar-overlay" v-if="sidebarOpen && isMobile" @click="sidebarOpen=false"></div>
+
+    <!-- ══════════ EDITOR ZONE ══════════ -->
+    <div class="editor-zone">
+      <div class="panes-row">
+        <!-- PRIMARY PANE -->
+        <div class="editor-pane primary-pane">
+          <div class="tab-bar">
+            <div v-for="f in flatFiles" :key="f.id"
+              class="tab" :class="{active:f.id===activeFileId}"
+              @click="switchFile(f.id)">
+              <span class="tab-lang-dot" :style="{background:langCfg(f.lang)?.color}"></span>
+              <span class="tab-name">{{ f.name }}</span>
+              <span v-if="f.unsaved" class="tab-unsaved" title="Unsaved">●</span>
+              <button v-if="flatFiles.length>1" class="tab-close" @click.stop="closeTab(f.id)">
+                <svg width="8" height="8" viewBox="0 0 8 8">
+                  <line x1="1" y1="1" x2="7" y2="7" stroke="currentColor" stroke-width="1.5"/>
+                  <line x1="7" y1="1" x2="1" y2="7" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+              </button>
+            </div>
+            <button class="tab-new" @click="createNewFile()" title="New File">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Find & Replace -->
+          <div class="find-bar" v-if="findOpen">
+            <div class="find-row">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--muted)">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input class="find-input" v-model="findQuery" placeholder="Find…"
+                @keyup.enter="doFind" @keyup.escape="findOpen=false" ref="findInputRef"/>
+              <input class="find-input" v-model="replaceQuery" placeholder="Replace…" @keyup.enter="doReplace"/>
+              <button class="find-btn" @click="doFind">Find</button>
+              <button class="find-btn" @click="doReplace">Replace</button>
+              <button class="find-btn find-close" @click="findOpen=false">✕</button>
+            </div>
+          </div>
+
+          <!-- Primary Editor -->
+          <div class="editor-wrap" :style="{height:editorWrapHeight}">
+            <div id="cm-editor"></div>
+          </div>
+        </div>
+
+        <!-- Split Divider -->
+        <div v-if="splitView && splitFileId" class="split-divider"
+          @mousedown="startSR" @touchstart.prevent="startSRT"></div>
+
+        <!-- Secondary Pane -->
+        <div v-if="splitView && splitFileId" class="editor-pane secondary-pane"
+          :style="{width:splitW+'px'}">
+          <div class="tab-bar split-tab-bar">
+            <div class="tab active">
+              <span class="tab-lang-dot" :style="{background:langCfg(splitFile?.lang)?.color}"></span>
+              <span class="tab-name">{{ splitFile?.name }}</span>
+              <span v-if="splitFile?.unsaved" class="tab-unsaved">●</span>
+            </div>
+            <button class="tab-close-pane" @click="closeSplit" title="Close split">✕</button>
+          </div>
+          <div class="editor-wrap" style="height:100%;">
+            <div id="cm-split"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal Handle -->
+      <div class="console-handle" @mousedown="startResize" @touchstart.prevent="startResizeT">
+        <div class="handle-inner">
+          <div class="handle-left">
+            <div class="terminal-dots">
+              <span class="tdot tdot-red"></span>
+              <span class="tdot tdot-yellow"></span>
+              <span class="tdot tdot-green"></span>
+            </div>
+            <span class="handle-label">TERMINAL</span>
+            <span class="terminal-lang-badge" v-if="activeLangCfg" :style="{color:activeLangCfg.color}">
+              {{ activeLangCfg.icon }} {{ activeLangCfg.label }}
+              <span v-if="canPreview" style="color:var(--cyan);font-size:0.6rem;">⚡</span>
+            </span>
+          </div>
+          <div class="handle-actions">
+            <button class="icon-btn-sm" @click.stop="clearOutput" title="Clear">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+              </svg>
+            </button>
+            <button class="icon-btn-sm" @click.stop="copyOutput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Terminal Output -->
+      <div class="console terminal" :style="{height:consoleH+'px'}" ref="consoleRef">
+        <div v-if="!outputLines.length" class="terminal-welcome">
+          <div class="terminal-prompt-line">
+            <span class="term-prompt">~$</span>
+            <span class="term-idle-text">
+              Press <kbd>Ctrl+Enter</kbd> to run
+              <span v-if="canPreview" style="color:var(--cyan)">⚡ offline</span>
+              <span v-else-if="!isOnline" style="color:var(--red)"> · internet required for {{ activeLangCfg?.label }}</span>
+            </span>
+            <span class="term-cursor-blink">▋</span>
+          </div>
+        </div>
+        <div v-for="(line,i) in outputLines" :key="i" class="out-line" :class="'out-'+line.type">
+          <span class="out-prefix-wrap">
+            <span v-if="line.type==='cmd'"     class="out-prefix term-prompt-sym">~$</span>
+            <span v-else-if="line.type==='error'"   class="out-prefix out-err-sym">✗</span>
+            <span v-else-if="line.type==='success'" class="out-prefix out-ok-sym">✓</span>
+            <span v-else-if="line.type==='info'"    class="out-prefix out-info-sym">›</span>
+            <span v-else-if="line.type==='ai'"      class="out-prefix out-ai-sym">✦</span>
+            <span v-else class="out-prefix">&nbsp;</span>
+          </span>
+          <span class="out-text" v-html="hlOut(line.text)"></span>
+        </div>
+        <!-- Terminal Input -->
+        <div class="terminal-input-line">
+          <span class="term-prompt">~$</span>
+          <input class="term-input" v-model="termInput"
+            @keydown.enter="execTerm"
+            @keydown.up.prevent="termUp"
+            @keydown.down.prevent="termDown"
+            placeholder="type a command… (try: help, ls, run, offline)"
+            ref="termInputRef"
+            autocomplete="off" autocorrect="off" spellcheck="false"/>
+          <span class="term-cursor-blink" v-if="!termInput">▋</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ PREVIEW / OUTPUT PANEL ══════════ -->
+    <aside class="preview-panel glass-panel" :class="{open:previewOpen}">
+      <div class="preview-head">
+        <div class="preview-title">
+          <template v-if="isWeb || activeLangCfg?.id==='markdown'">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+            Live Preview
+          </template>
+          <template v-else>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+            Execution Output
+          </template>
+        </div>
+        <div class="preview-head-actions">
+          <template v-if="isWeb || activeLangCfg?.id==='markdown'">
+            <button class="icon-btn-sm" @click="refreshPreview" title="Refresh">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+            <button class="icon-btn-sm" @click="popoutPreview" title="Open in new tab">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+          </template>
+          <template v-else>
+            <button class="icon-btn-sm" @click="clearOutput" title="Clear">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+              </svg>
+            </button>
+            <button class="icon-btn-sm" @click="copyOutput" title="Copy">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <rect x="9" y="9" width="13" height="13" rx="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </template>
+          <button class="icon-btn-sm" @click="previewOpen=false">✕</button>
+        </div>
+      </div>
+
+      <!-- Web preview / Markdown -->
+      <div v-if="isWeb || activeLangCfg?.id==='markdown'" class="preview-browser-wrap">
+        <div class="browser-bar">
+          <div class="browser-dots">
+            <span class="bdot bdot-red"></span><span class="bdot bdot-yellow"></span><span class="bdot bdot-green"></span>
+          </div>
+          <div class="browser-url">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--green);flex-shrink:0">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span class="browser-url-text">offline://{{ activeFile?.name }}</span>
+          </div>
+          <div class="browser-bar-right">
+            <button class="browser-action-btn" @click="refreshPreview">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+            <button class="browser-action-btn" @click="popoutPreview">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="browser-viewport">
+          <iframe ref="previewRef" class="preview-iframe-full"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            title="Live Preview"></iframe>
+          <div class="preview-loading-bar" v-if="previewLoad">
+            <div class="preview-loading-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Non-web: Execution Output -->
+      <div v-else class="exec-output-panel">
+        <div class="exec-stats-bar" v-if="lastStats.time!==null">
+          <span class="exec-stat">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            {{ lastStats.time }}ms
+          </span>
+          <span class="exec-stat" v-if="lastStats.lines">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg>
+            {{ lastStats.lines }} lines
+          </span>
+          <span class="exec-stat" :class="lastStats.exit===0?'exec-ok':'exec-fail'">
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <template v-if="lastStats.exit===0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></template>
+              <template v-else><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></template>
+            </svg>
+            Exit {{ lastStats.exit }}
+          </span>
+          <span class="exec-stat-lang" :style="{color:activeLangCfg?.color}">
+            {{ activeLangCfg?.icon }} {{ activeLangCfg?.label }}
+            <span v-if="canPreview" style="color:var(--cyan)">⚡</span>
+          </span>
+        </div>
+
+        <div class="preview-offline-notice" v-if="!isOnline && !canPreview">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--red)">
+            <line x1="1" y1="1" x2="23" y2="23"/>
+            <path d="M21.67 17.67A7 7 0 0 0 17 5h-1.26A9 9 0 0 0 3.2 10.06m.07 5.94H17"/>
+          </svg>
+          <span>Internet required for {{ activeLangCfg?.label }}. Use Python, JS, HTML, CSS, SQL offline.</span>
+        </div>
+
+        <div class="exec-running-bar" v-if="isRunning">
+          <div class="exec-running-fill"></div>
+          <span class="exec-running-label">{{ runStatus }}</span>
+        </div>
+
+        <div class="exec-output-scroll" ref="execRef">
+          <div v-if="!outputLines.length && !isRunning" class="exec-empty">
+            <div class="exec-empty-icon">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--muted)">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+            </div>
+            <div class="exec-empty-text">Run your code to see output</div>
+            <div class="exec-empty-hint">
+              <span v-if="canPreview" style="color:var(--cyan)">⚡ Runs offline</span>
+              <span v-else>Ctrl+Enter or click RUN</span>
+            </div>
+          </div>
+          <div v-for="(line,i) in outputLines" :key="i" class="exec-line" :class="'exec-'+line.type">
+            <span class="exec-gutter">{{ String(i+1).padStart(3,' ') }}</span>
+            <span class="exec-line-text" v-html="hlOut(line.text)"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══════════ AI PANEL ══════════ -->
+    <aside class="ai-panel glass-panel" :class="{open:aiPanelOpen}">
+      <div class="ai-head">
+        <div class="ai-title">
+          <div class="ai-status-dot" :style="{background:isOnline?'var(--purple)':'var(--red)'}"></div>
+          AI Assistant
+        </div>
+        <div class="ai-head-actions">
+          <button class="icon-btn-sm" @click="clearAI" title="Clear">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+            </svg>
+          </button>
+          <button class="icon-btn-sm" @click="aiPanelOpen=false">✕</button>
+        </div>
+      </div>
+
+      <div v-if="!isOnline" class="ai-offline-notice">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--red)">
+          <line x1="1" y1="1" x2="23" y2="23"/>
+          <path d="M21.67 17.67A7 7 0 0 0 17 5h-1.26A9 9 0 0 0 3.2 10.06m.07 5.94H17"/>
+        </svg>
+        <span>AI requires internet. Code runs offline!</span>
+      </div>
+
+      <div class="ai-context-bar">
+        <span class="ai-ctx-label">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          {{ aiCtx?flatFiles.length+' file(s) in context':'No code context' }}
+        </span>
+        <button class="ai-ctx-toggle" :class="{active:aiCtx}" @click="aiCtx=!aiCtx">
+          {{ aiCtx?'ON':'OFF' }}
+        </button>
+      </div>
+
+      <div class="ai-presets">
+        <button v-for="p in aiPresets" :key="p.label" class="preset-btn"
+          @click="aiPrompt=p.prompt">{{ p.label }}</button>
+      </div>
+
+      <div class="ai-chat-wrap" ref="aiChatRef">
+        <div v-if="!aiMessages.length" class="ai-empty">
+          <div class="ai-empty-icon">✦</div>
+          <p>Ask me anything about your code.<br>
+            With context <strong>ON</strong>, I can see all {{ flatFiles.length }} open file(s).</p>
+        </div>
+        <div v-for="(m,i) in aiMessages" :key="i" class="ai-msg" :class="'ai-msg-'+m.role">
+          <div class="ai-msg-role">{{ m.role==='user'?'You':'AI' }}</div>
+          <div class="ai-msg-content" v-html="fmtAI(m.content)"></div>
+        </div>
+        <div v-if="aiLoading" class="ai-thinking">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="ai-input-wrap">
+        <textarea class="ai-textarea" v-model="aiPrompt" rows="3"
+          :placeholder="isOnline?'Ask about your code… (Ctrl+Enter)':'⚠ Internet required for AI'"
+          :disabled="!isOnline"
+          @keydown.enter.ctrl="sendAI" @keydown.enter.meta="sendAI">
+        </textarea>
+        <div class="ai-input-actions">
+          <span class="ai-model-badge">claude-sonnet-4</span>
+          <button class="ai-send-btn" @click="sendAI" :disabled="aiLoading||!isOnline">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+            Send
+          </button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ══════════ STATUS BAR ══════════ -->
+  <footer class="statusbar" :class="{'focus-mode':focusMode}">
+    <div class="sb-left">
+      <button class="sb-btn" @click="sidebarOpen=!sidebarOpen">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+        {{ settings.projectName||'my-project' }}
+      </button>
+      <span class="sb-sep">›</span>
+      <span class="sb-git">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>
+          <path d="M18 9a9 9 0 0 1-9 9"/>
+        </svg>
+        main
+      </span>
+      <span v-if="modifiedCount>0" class="git-m">M+{{ modifiedCount }}</span>
+    </div>
+
+    <div class="sb-center">
+      <span class="sb-file" :style="{color:activeLangCfg?.color}">
+        {{ activeLangCfg?.icon }} {{ activeFile?.name }}
+      </span>
+      <span class="sb-sep">|</span>
+      <span>Ln {{ cursorLine }}, Col {{ cursorCol }}</span>
+    </div>
+
+    <div class="sb-right">
+      <span class="sb-network" :class="isOnline?'online':'offline'">
+        <span class="net-dot" :class="isOnline?'online':'offline'"></span>
+        {{ isOnline?'Online':'Offline' }}
+      </span>
+      <span class="sb-sep">|</span>
+      <span style="color:var(--cyan);font-size:0.65rem;font-weight:600" v-if="canPreview">⚡ Offline</span>
+      <span class="sb-sep" v-if="canPreview">|</span>
+      <span class="sb-encoding">UTF-8</span>
+      <span class="sb-sep">|</span>
+      <span class="sb-lang-label" :style="{color:activeLangCfg?.color}">{{ activeLangCfg?.label }}</span>
+      <span class="sb-sep">|</span>
+      <button class="sb-btn focus-toggle" :class="{active:focusMode}" @click="toggleFocus" title="Focus Mode">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path v-if="!focusMode" d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          <path v-else d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>
+        </svg>
+        {{ focusMode?'Exit':'Focus' }}
+      </button>
+      <span class="sb-sep">|</span>
+      <span class="sb-live">
+        <span class="status-dot-sm" :class="isOnline?apiStatus:'offline-ok'"></span>
+        {{ !isOnline ? 'Offline' : (apiStatus==='ok'?'Live':apiStatus==='loading'?'Running':'Error') }}
+      </span>
+    </div>
+  </footer>
+
+  </template>
+  <!-- ══════════ IMPORT PANEL ══════════ -->
+  <div class="import-panel" v-if="importOpen" @click.self="closeImport">
+    <div class="import-box">
+      <div class="import-head">
+        <div class="import-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--cyan)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          Import Files
+          <span style="font-size:0.68rem;color:var(--muted);font-weight:400">— device / paste / URL</span>
+        </div>
+        <button class="modal-close" @click="closeImport">✕</button>
+      </div>
+      <div class="import-body">
+        <div>
+          <div class="import-section-title">📁 From Device Storage</div>
+          <div class="drop-zone" :class="{'drag-over':isDragOver}"
+            @drop="onDropZone" @dragover="onDragOver" @dragleave="onDragLeave"
+            @click="triggerFileInput">
+            <div class="drop-zone-icon">📂</div>
+            <div class="drop-zone-text">Drop files here or <strong>click to browse</strong></div>
+            <div class="drop-zone-hint">.py .js .ts .html .css .java .cpp .c .rs .go .php .rb .sql .md and more</div>
+          </div>
+        </div>
+        <div v-if="importFiles.length">
+          <div class="import-section-title">📋 Files to Import ({{ importFiles.length }})</div>
+          <div class="import-file-list">
+            <div v-for="f in importFiles" :key="f.id" class="import-file-item">
+              <span class="import-file-dot" :style="{background:langCfg(f.lang)?.color||'#8b949e'}"></span>
+              <span class="import-file-name">{{ f.name }}</span>
+              <span style="font-size:0.65rem;color:var(--blue);flex-shrink:0">{{ f.lang }}</span>
+              <span class="import-file-size">{{ fmtSize(f.size) }}</span>
+              <button class="import-file-remove" @click="removeImportFile(f.id)">✕</button>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="import-section-title">✏️ Paste Code</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">
+            <span style="font-size:0.72rem;color:var(--muted)">Language:</span>
+            <select class="import-lang-select" v-model="importPasteLang">
+              <optgroup v-for="g in langGroups" :key="g.label" :label="g.label">
+                <option v-for="l in g.langs" :key="l.id" :value="l.id">{{ l.icon }} {{ l.label }}</option>
+              </optgroup>
+            </select>
+          </div>
+          <textarea class="import-paste-area" v-model="importPaste" placeholder="Paste your code here…"></textarea>
+          <button class="btn-secondary" style="margin-top:6px;width:100%" @click="addPasteAsFile">+ Add as File</button>
+        </div>
+        <div v-if="isOnline">
+          <div class="import-section-title">🌐 From URL</div>
+          <div class="import-url-row">
+            <input class="import-url-input" v-model="importURL" placeholder="https://raw.githubusercontent.com/…" @keyup.enter="fetchURL"/>
+            <button class="btn-secondary" @click="fetchURL">Fetch</button>
+          </div>
+        </div>
+        <div v-else style="font-size:0.72rem;color:var(--muted)">⚠ Connect internet to import from URL.</div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn-secondary" @click="closeImport">Cancel</button>
+        <button class="btn-primary" @click="confirmImport" :disabled="!importFiles.length" :style="!importFiles.length?'opacity:.4;cursor:not-allowed':''">
+          Import {{ importFiles.length }} File{{ importFiles.length!==1?'s':'' }} →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ TOASTS ══════════ -->
+  <div v-for="t in toasts" :key="t.id" class="toast" :class="t.type">{{ t.msg }}</div>
+
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
