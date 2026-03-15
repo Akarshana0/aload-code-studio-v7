@@ -16,7 +16,7 @@ npx serve .
 ## Deploy to GitHub Pages
 1. Push this folder to a GitHub repo
 2. Go to Settings → Pages → Deploy from branch `main`
-3. Visit `https://yourusername.github.io/repo-name`
+3. Visit `https://github.com/Akarshana0/aload-code-studio-v7.git`
 
 ## Features
 - ⚡ All 20 languages run **offline** (simulators)
